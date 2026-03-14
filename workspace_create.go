@@ -17,15 +17,26 @@ func doWorkspaceCreate(c *cli.Context) error {
 	if c.NArg() == 0 {
 		return fmt.Errorf("repo URL is required")
 	}
-	argURL := c.Args().First()
 
-	profileName := c.String("profile")
-	name := c.String("name")
-	purpose := c.String("purpose")
-	branch := c.String("branch")
+	// urfave/cli/v2 stops flag parsing at the first non-flag argument, so
+	// flags placed after the URL (e.g. `create <url> --name foo`) land in
+	// c.Args() instead of being parsed. We scan all args to extract them.
+	argURL, extraFlags := parseWorkspaceCreateArgs(c.Args().Slice())
+	if argURL == "" {
+		return fmt.Errorf("repo URL is required")
+	}
+
+	profileName := firstNonEmpty(c.String("profile"), extraFlags["profile"], "task")
+	name := firstNonEmpty(c.String("name"), extraFlags["name"])
+	purpose := firstNonEmpty(c.String("purpose"), extraFlags["purpose"])
+	branch := firstNonEmpty(c.String("branch"), extraFlags["branch"])
 	sparsePaths := c.StringSlice("sparse")
+	if len(sparsePaths) == 0 {
+		if s := extraFlags["sparse"]; s != "" {
+			sparsePaths = strings.Split(s, ",")
+		}
+	}
 
-	// --sparse implies sparse profile
 	if len(sparsePaths) > 0 {
 		profileName = "sparse"
 	}
@@ -49,7 +60,7 @@ func doWorkspaceCreate(c *cli.Context) error {
 	workspaceRoot := filepath.Join(primaryRoot, "workspaces")
 
 	if name == "" {
-		name = repoShort + "-" + time.Now().UTC().Format("20060102-150405")
+		name = repoShort + "-" + time.Now().Format("20060102-150405")
 	}
 
 	workspaceDir := filepath.Join(workspaceRoot, name)
@@ -134,4 +145,52 @@ func doWorkspaceCreate(c *cli.Context) error {
 
 	fmt.Fprintln(c.App.Writer, workspaceDir)
 	return nil
+}
+
+// parseWorkspaceCreateArgs separates the repo URL from any flags that ended
+// up in the args slice because they were placed after the first positional arg
+// (urfave/cli/v2 stops flag parsing at the first non-flag argument).
+// Returns the URL and a map of flag-name → value for the known string flags.
+func parseWorkspaceCreateArgs(args []string) (url string, flags map[string]string) {
+	flags = make(map[string]string)
+	knownFlags := map[string]bool{
+		"name": true, "profile": true, "purpose": true, "branch": true, "b": true, "sparse": true,
+	}
+	i := 0
+	for i < len(args) {
+		arg := args[i]
+		if strings.HasPrefix(arg, "--") {
+			key := strings.TrimPrefix(arg, "--")
+			if knownFlags[key] && i+1 < len(args) {
+				flags[key] = args[i+1]
+				i += 2
+				continue
+			}
+		} else if strings.HasPrefix(arg, "-") {
+			key := strings.TrimPrefix(arg, "-")
+			if knownFlags[key] && i+1 < len(args) {
+				flags[key] = args[i+1]
+				i += 2
+				continue
+			}
+		} else if url == "" {
+			url = arg
+		}
+		i++
+	}
+	// Normalize -b alias
+	if v, ok := flags["b"]; ok && flags["branch"] == "" {
+		flags["branch"] = v
+	}
+	return url, flags
+}
+
+// firstNonEmpty returns the first non-empty string from the given values.
+func firstNonEmpty(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
 }
