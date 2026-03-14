@@ -15,6 +15,7 @@ var commands = []*cli.Command{
 	commandRoot,
 	commandCreate,
 	commandMigrate,
+	commandWorkspace,
 }
 
 var commandGet = &cli.Command{
@@ -112,7 +113,8 @@ var commandDocs = map[string]commandDoc{
 	"create":  {"", "<project>|<user>/<project>|<host>/<user>/<project>"},
 	"rm":      {"", "<project>|<user>/<project>|<host>/<user>/<project>"},
 	"root":    {"", "[-all]"},
-	"migrate": {"", "[-y] [--dry-run] <repository-directory>"},
+	"migrate":    {"", "[-y] [--dry-run] <repository-directory>"},
+	"workspace":  {"", "<subcommand> [flags]"},
 }
 
 // Makes template conditionals to generate per-command documents.
