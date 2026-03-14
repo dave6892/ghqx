@@ -48,6 +48,7 @@ type vcsGetOption struct {
 	dir                              string
 	recursive, shallow, silent, bare bool
 	branch, partial                  string
+	ExtraArgs                        []string
 }
 
 // getGitRemoteURL retrieves the remote URL from a git repository.
@@ -122,6 +123,7 @@ var GitBackend = &VCSBackend{
 		} else if vg.partial == "treeless" {
 			args = append(args, "--filter=tree:0")
 		}
+		args = append(args, vg.ExtraArgs...)
 		args = append(args, vg.url.String(), vg.dir)
 
 		return run(vg.silent)("git", args...)
