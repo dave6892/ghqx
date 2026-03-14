@@ -40,24 +40,36 @@ func doWorkspaceList(c *cli.Context) error {
 
 func doWorkspaceRemove(c *cli.Context) error {
 	if c.NArg() == 0 {
-		return fmt.Errorf("workspace name is required")
+		return fmt.Errorf("at least one workspace name is required")
 	}
-	name := c.Args().First()
-	entry, err := registryFind(name)
-	if err != nil {
-		return err
+	dryRun := c.Bool("dry-run")
+	var errs []string
+	for _, name := range c.Args().Slice() {
+		entry, err := registryFind(name)
+		if err != nil {
+			errs = append(errs, fmt.Sprintf("%s: %v", name, err))
+			continue
+		}
+		if entry == nil {
+			errs = append(errs, fmt.Sprintf("%s: not found", name))
+			continue
+		}
+		if dryRun {
+			fmt.Fprintf(c.App.Writer, "would remove: %s\n", entry.Path)
+			continue
+		}
+		if err := os.RemoveAll(entry.Path); err != nil {
+			errs = append(errs, fmt.Sprintf("%s: %v", name, err))
+			continue
+		}
+		if err := registryRemove(name); err != nil {
+			errs = append(errs, fmt.Sprintf("%s: registry: %v", name, err))
+		}
 	}
-	if entry == nil {
-		return fmt.Errorf("workspace %q not found", name)
+	if len(errs) > 0 {
+		return fmt.Errorf("%s", strings.Join(errs, "\n"))
 	}
-	if c.Bool("dry-run") {
-		fmt.Fprintf(c.App.Writer, "would remove: %s\n", entry.Path)
-		return nil
-	}
-	if err := os.RemoveAll(entry.Path); err != nil {
-		return err
-	}
-	return registryRemove(name)
+	return nil
 }
 
 func doWorkspaceClean(c *cli.Context) error {

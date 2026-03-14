@@ -61,7 +61,7 @@ var commandWorkspaceList = &cli.Command{
 var commandWorkspaceRemove = &cli.Command{
 	Name:      "remove",
 	Aliases:   []string{"rm"},
-	ArgsUsage: "<name>",
+	ArgsUsage: "<name> [<name>...]",
 	Usage:     "Delete a workspace and its registry entry",
 	Action:    doWorkspaceRemove,
 	Flags: []cli.Flag{
