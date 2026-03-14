@@ -113,8 +113,8 @@ var commandDocs = map[string]commandDoc{
 	"create":  {"", "<project>|<user>/<project>|<host>/<user>/<project>"},
 	"rm":      {"", "<project>|<user>/<project>|<host>/<user>/<project>"},
 	"root":    {"", "[-all]"},
-	"migrate":    {"", "[-y] [--dry-run] <repository-directory>"},
-	"workspace":  {"", "<subcommand> [flags]"},
+	"migrate":   {"", "[-y] [--dry-run] <repository-directory>"},
+	"workspace": {"", "<subcommand> [flags]"},
 }
 
 // Makes template conditionals to generate per-command documents.
