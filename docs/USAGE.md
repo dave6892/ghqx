@@ -17,6 +17,58 @@ ghqx is a fork of [ghq](https://github.com/x-motemen/ghq) that extends the origi
     └── review-pr-42/
 ```
 
+## Installation
+
+### Build from source (recommended for now)
+
+Requires [Go 1.21+](https://go.dev/dl/).
+
+```zsh
+# Clone the repo
+ghq get github.com/dave6892/ghqx   # if you already have ghq/ghqx
+# or
+git clone https://github.com/dave6892/ghqx.git ~/ghqx && cd ~/ghqx
+
+# Install to $GOPATH/bin (make sure $GOPATH/bin is in your $PATH)
+go install -ldflags="-s -w" .
+
+# Verify
+ghqx --version
+```
+
+Or use `make install` if you have the dev dependencies:
+
+```zsh
+make install
+```
+
+### Shell setup
+
+Add an alias or shell function to make navigation easier:
+
+```zsh
+# ~/.zshrc
+
+# cd into a repo selected with fzf
+function gcd() {
+  local repo
+  repo=$(ghqx list -p | fzf) && cd "$repo"
+}
+
+# Optional: alias ghq to ghqx if replacing ghq entirely
+# alias ghq=ghqx
+```
+
+### git config
+
+Set your ghq root (defaults to `~/ghq` if not set):
+
+```zsh
+git config --global ghq.root ~/ghq
+```
+
+---
+
 ## Quick Start
 
 ```zsh
