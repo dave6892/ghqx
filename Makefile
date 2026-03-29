@@ -29,7 +29,7 @@ build: deps
 
 .PHONY: install
 install: deps
-	go install $(VERBOSE_FLAG) -ldflags=$(BUILD_LDFLAGS)
+	go build $(VERBOSE_FLAG) -ldflags=$(BUILD_LDFLAGS) -o $(shell go env GOPATH)/bin/ghqx .
 
 .PHONY: release
 release: devel-deps
